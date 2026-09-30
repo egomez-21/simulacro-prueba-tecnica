@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Examen - Mecánica de Precisión y CAD/CAM/CNC</title>
+    <style>
+        :root {
+            --primary-color: #003366;
+            --secondary-color: #0066cc;
+            --accent-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --light-bg: #f8f9fa;
+            --dark-text: #212529;
+            --border-color: #dee2e6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #eef2f5;
+            color: var(--dark-text);
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.3rem;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 1.5rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 850px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Modal Registro */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: #0052a3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-success {
+            background-color: var(--accent-color);
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        /* Timers Bar */
+        .timers-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #e9ecef;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .timer-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .timer-val {
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            background: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .timer-warning {
+            color: var(--danger-color) !important;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Question Panel */
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--light-bg);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .topic-badge {
+            background-color: #e2e8f0;
+            color: #475569;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+        }
+
+        .options-list {
+            list-style: none;
+        }
+
+        .option-item {
+            margin-bottom: 0.8rem;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: flex-start;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-label:hover {
+            background-color: #f1f5f9;
+            border-color: var(--secondary-color);
+        }
+
+        .option-label input {
+            margin-top: 0.25rem;
+            margin-right: 0.8rem;
+        }
+
+        .option-label.selected {
+            background-color: #e6f0fa;
+            border-color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            gap: 1rem;
+        }
+
+        .nav-buttons .btn {
+            width: auto;
+        }
+
+        /* Sidebar Grid */
+        .sidebar-title {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .grid-nav {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 0.3rem;
+        }
+
+        .grid-btn {
+            aspect-ratio: 1;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .grid-btn:hover {
+            border-color: var(--secondary-color);
+        }
+
+        .grid-btn.active {
+            border: 2px solid var(--primary-color);
+            background-color: #e2e8f0;
+        }
+
+        .grid-btn.answered {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        /* Results Panel */
+        .results-panel {
+            display: none;
+        }
+
+        .score-box {
+            text-align: center;
+            padding: 2rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border: 2px solid var(--border-color);
+        }
+
+        .score-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .status-passed { color: var(--accent-color); }
+        .status-failed { color: var(--danger-color); }
+
+        .review-item {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: white;
+        }
+
+        .review-item.correct-bg {
+            border-left: 5px solid var(--accent-color);
+        }
+
+        .review-item.incorrect-bg {
+            border-left: 5px solid var(--danger-color);
+        }
+
+        .justification {
+            margin-top: 0.8rem;
+            padding: 0.8rem;
+            background: #f1f5f9;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .student-info-bar {
+            background: #ffffff;
+            padding: 0.8rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Modal Registro Inicial -->
+    <div class="modal-overlay" id="registrationModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 1rem; color: var(--primary-color);">Registro del Estudiante</h2>
+            <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: #64748b;">Ingrese su nombre completo para iniciar el examen simulador de Mecánica de Precisión.</p>
+            <form id="registrationForm" onsubmit="startExam(event)">
+                <div class="form-group">
+                    <label for="studentName">Nombre Completo:</label>
+                    <input type="text" id="studentName" required placeholder="Ej. Juan Pérez González">
+                </div>
+                <button type="submit" class="btn">Comenzar Evaluación</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Encabezado Principal -->
+    <header>
+        <h1>Simulador de Evaluación Técnica</h1>
+        <p>Especialidad: Mecánica de Precisión / CAD-CAM-CNC</p>
+    </header>
+
+    <!-- Contenedor Principal Examen -->
+    <div class="container" id="examContainer" style="display: none;">
+        
+        <!-- Panel de Preguntas -->
+        <main>
+            <div class="student-info-bar">
+                <span><strong>Estudiante:</strong> <span id="dispStudentName">-</span></span>
+                <span><strong>Total de Ítems:</strong> 60</span>
+            </div>
+
+            <div class="timers-bar">
+                <div class="timer-box">
+                    <span>Tiempo Examen:</span>
+                    <span class="timer-val" id="globalTimer">180:00</span>
+                </div>
+                <div class="timer-box">
+                    <span>Tiempo Pregunta:</span>
+                    <span class="timer-val" id="itemTimer">03:00</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="question-header">
+                    <span>Pregunta <span id="currentQNum">1</span> de 60</span>
+                    <span class="topic-badge" id="topicBadge">Tema</span>
+                </div>
+
+                <div class="question-text" id="questionText">Cargando pregunta...</div>
+
+                <ul class="options-list" id="optionsList">
+                    <!-- Opciones renderizadas dinámicamente -->
+                </ul>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" id="btnPrev" onclick="navigate(-1)">Anterior</button>
+                    <button class="btn" id="btnNext" onclick="navigate(1)">Siguiente</button>
+                    <button class="btn btn-success" id="btnFinish" onclick="confirmFinish()" style="display: none;">Finalizar Examen</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Barra Lateral Navegación Grid -->
+        <aside>
+            <div class="card">
+                <div class="sidebar-title">Mapa de Preguntas</div>
+                <div class="grid-nav" id="gridNav">
+                    <!-- Cuadrícula 1 a 60 generada en JS -->
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Panel de Resultados -->
+    <div class="container results-panel" id="resultsPanel">
+        <main style="grid-column: 1 / -1;">
+            <div class="card">
+                <h2 style="color: var(--primary-color); margin-bottom: 1rem;">Informe de Resultados</h2>
+                
+                <div class="student-info-bar">
+                    <span><strong>Estudiante:</strong> <span id="resStudentName">-</span></span>
+                    <span><strong>Fecha:</strong> <span id="resDate">-</span></span>
+                </div>
+
+                <div class="score-box">
+                    <div>Calificación Obtenida</div>
+                    <div class="score-number" id="scoreDisplay">0.0%</div>
+                    <div id="statusDisplay" style="font-size: 1.2rem; font-weight: bold;">-</div>
+                    <p style="margin-top: 0.5rem; color: #64748b;" id="summaryCounts">Correctas: 0 | Incorrectas: 0 | Omitidas: 0</p>
+                </div>
+
+                <h3 style="margin-bottom: 1rem;">Revisión Detallada de Respuestas</h3>
+                <div id="reviewContainer">
+                    <!-- Lista de revisión generada dinámicamente -->
+                </div>
+
+                <div style="margin-top: 2rem; text-align: center;">
+                    <button class="btn" onclick="location.reload()" style="max-width: 300px;">Realizar Nueva Evaluación</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Banco Completo de 60 Preguntas
+        const questionBank = [
+            // Tema 1: Metrología
+            { id: 1, topic: "Metrología", text: "En un calibrador pie de rey con resolución de 0,02 mm, la escala del nonio está dividida en:", options: ["20 divisiones", "50 divisiones", "10 divisiones", "100 divisiones"], correct: 1, justification: "Un nonio con resolución de 0,02 mm divide 49 mm en 50 partes iguales (1/50 = 0,02 mm)." },
+            { id: 2, topic: "Metrología", text: "Al medir con un micrómetro de exteriores de 0-25 mm, ¿cuál es la función del trinquete o chicharra?", options: ["Bloquear el husillo en una medida fija", "Garantizar una presión de medición constante", "Ajustar el cero de la escala", "Mover rápidamente el tambor"], correct: 1, justification: "El trinquete limita la fuerza aplicada, evitando deformaciones en la pieza o el instrumento y asegurando lecturas repetibles." },
+            { id: 3, topic: "Metrología", text: "¿Cuál instrumento es el más adecuado para comprobar la planitud absoluta de una superficie mediante interferometría?", options: ["Mármol de granito", "Planos ópticos", "Reloj comparador", "Regla de precisión"], correct: 1, justification: "Los planos ópticos utilizan patrones de interferencia de luz para evaluar desviaciones de planitud a nivel micrométrico." },
+            { id: 4, topic: "Metrología", text: "Un goniómetro universal graduado tiene una apreciación típica en su nonio de:", options: ["1 grado (1°)", "5 minutos (5')", "1 minuto (1')", "30 segundos (30\")"], correct: 1, justification: "El nonio del goniómetro universal típicamente divide 23° en 12 partes, logrando una precisión de 5 minutos de arco." },
+            { id: 5, topic: "Metrología", text: "¿Qué grado de precisión según norma DIN/ISO se requiere generalmente en bloques patrón de calibración de taller?", options: ["Grado 00", "Grado 0", "Grado 1 o 2", "Grado 3"], correct: 2, justification: "Los grados 1 y 2 son para uso y verificación directa en taller, mientras que 0 y 00 son para calibración y laboratorios de metrología." },
+
+            // Tema 2: Tolerancias y Ajustes
+            { id: 6, topic: "Tolerancias y Ajustes", text: "En el sistema ISO de ajustes, la letra mayúscula (ej. H) en una designación '40 H7' se refiere a:", options: ["La tolerancia del eje", "La tolerancia del agujero", "El acabado superficial", "El tipo de material"], correct: 1, justification: "Las letras mayúsculas en el sistema ISO definen la posición de la zona de tolerancia para agujeros (las minúsculas para ejes)." },
+            { id: 7, topic: "Tolerancias y Ajustes", text: "Un ajuste designado como 'H7/p6' corresponde a un ajuste de tipo:", options: ["Con juego (deslizante)", "Indeterminado", "Con apriete (interferencia)", "Móvil ligero"], correct: 2, justification: "La combinación H/p define la zona del eje por encima del agujero, garantizando interferencia o apriete en todo el rango." },
+            { id: 8, topic: "Tolerancias y Ajustes", text: "El parámetro de rugosidad Ra representa:", options: ["La altura máxima del perfil de rugosidad", "El promedio aritmético de las desviaciones del perfil", "La profundidad total del valle", "El espaciado medio entre picos"], correct: 1, justification: "Ra es la desviación media aritmética de los valores absolutos de las alturas del perfil dentro de la longitud de muestreo." },
+            { id: 9, topic: "Tolerancias y Ajustes", text: "¿Qué símbolo de tolerancia geométrica indica la variación permitida en la redondez de un cilindro en cualquier sección transversal?", options: ["Cilindricidad", "Circularidad (Redondez)", "Coaxialidad", "Concentricidad"], correct: 1, justification: "La circularidad controla exclusivamente el perfil en cada plano de sección transversal individual independientemente del eje." },
+            { id: 10, topic: "Tolerancias y Ajustes", text: "Si un eje tiene una dimensión de Ø25 +0,02 / -0,01 mm, su campo de tolerancia es:", options: ["0,01 mm", "0,02 mm", "0,03 mm", "0,015 mm"], correct: 2, justification: "El campo de tolerancia es la diferencia entre el límite superior y el inferior: +0,02 - (-0,01) = 0,03 mm." },
+
+            // Tema 3: Herramientas Manuales
+            { id: 11, topic: "Herramientas Manuales", text: "En la selección de una hoja de sierra manual, para cortar tubos de pared delgada de acero se recomienda un dentado de:", options: ["14 dientes por pulgada", "18 dientes por pulgada", "32 dientes por pulgada", "8 dientes por pulgada"], correct: 2, justification: "Se requieren al menos 2 a 3 dientes en contacto simultáneo con la pared delgada para evitar que la hoja se trabe o rompa dadas las 32 tpi." },
+            { id: 12, topic: "Herramientas Manuales", text: "¿Cuál es el ángulo de picado secundario en una lima para metales y cuál es su propósito principal?", options: ["Romper la viruta y facilitar su desalojo", "Dar rigidez a la herramienta", "Determinar la dureza", "Evitar el desgaste del mango"], correct: 0, justification: "El doble picado cruza surcos que rompen la viruta en fragmentos más pequeños impidiendo el embotamiento prematuro." },
+            { id: 13, topic: "Herramientas Manuales", text: "La operación de alisado con lima se realiza preferiblemente empleando una lima de tipo:", options: ["Bastarda", "Entrefina", "Fina o dulce", "Especial para aluminio"], correct: 2, justification: "Las limas finas/dulces tienen picado muy denso, removiendo poco material pero generando excelente acabado superficial." },
+            { id: 14, topic: "Herramientas Manuales", text: "Al trazar sobre una superficie metálica, se aplica previamente azul de metileno o sulfato de cobre con el fin de:", options: ["Evitar la corrosión del metal", "Hacer visibles las líneas trazadas con la punta de trazar", "Lubricar la pieza durante el corte", "Medir la dureza superficial"], correct: 1, justification: "Proporciona un contraste óptico de alto relieve al rayar con la punta de trazar de acero templado o metal duro." },
+            { id: 15, topic: "Herramientas Manuales", text: "El granete o punto de marcar para centrar taladros debe poseer un ángulo en su punta de:", options: ["30°", "60°", "90°", "120°"], correct: 2, justification: "El granete de marcar taladros usa 90° para alojar de forma estable la punta de la broca helicoidal (que suele ser de 118°)." },
+
+            // Tema 4: Taladro y Roscado
+            { id: 16, topic: "Taladrado y Roscado", text: "Para calcular las RPM al taladrar un acero con una broca HSS de Ø10 mm y una velocidad de corte Vc = 25 m/min, se aplica la fórmula:", options: ["N = (Vc * 1000) / (π * D)", "N = (Vc * D) / 1000", "N = Vc * π * D", "N = 1000 / (Vc * D)"], correct: 0, justification: "N (rpm) = (Vc (m/min) * 1000) / (π * D (mm))." },
+            { id: 17, topic: "Taladrado y Roscado", text: "¿Cuál es el diámetro de broca recomendado para taladrar antes de pasar un macho de roscar M10 x 1,5 mm?", options: ["10,0 mm", "8,5 mm", "9,0 mm", "7,5 mm"], correct: 1, justification: "El diámetro aproximado de broca para roscado métrico es: D_broca = D_nominal - Paso = 10 - 1,5 = 8,5 mm." },
+            { id: 18, topic: "Taladrado y Roscado", text: "En un juego de tres machos de roscar manuales estándar, el primer macho (cónico) se distingue por:", options: ["Tener la rosca completa hasta la punta", "Tener un chaflán de entrada largo en los primeros hilos", "Tener mango de mayor diámetro", "Tener paso inverso"], correct: 1, justification: "El primer macho posee un cono de entrada muy pronunciado para facilitar la alineación e iniciar el corte progresivo." },
+            { id: 19, topic: "Taladrado y Roscado", text: "El escariado de un agujero con escariador manual tiene como objetivo principal:", options: ["Aumentar rápidamente el diámetro", "Obtener alta precisión dimensional y excelente acabado", "Hacer chaflanes de entrada", "Preparar la superficie para soldar"], correct: 1, justification: "El escariador remueve muy poco material (0,1-0,3 mm) únicamente para calibrar el agujero a una tolerancia estrecha (ej. H7)." },
+            { id: 20, topic: "Taladrado y Roscado", text: "Si al taladrar una pieza las virutas salen azules y la broca se desgasta rápidamente en las esquinas, esto indica:", options: ["Avance demasiado bajo", "Velocidad de corte demasiado alta", "Exceso de refrigerante", "Falta de afilado en el núcleo"], correct: 1, justification: "La velocidad excesiva genera temperatura extrema por fricción, destemplando los filos de la broca y oxidando la viruta a tono azul." },
+
+            // Tema 5: Materiales y Metalurgia
+            { id: 21, topic: "Materiales e Industria", text: "Un acero designado según norma AISI/SAE como '1045' es un acero:", options: ["Inoxidable austenítico", "Al carbono con 0,45% de carbono", "Aleado al cromo-niquel", "De herramientas para trabajo en caliente"], correct: 1, justification: "En SAE/AISI, 10xx indica acero al carbono ordinario y los dos últimos dígitos representan el porcentaje de C en centésimas (0.45%)." },
+            { id: 22, topic: "Materiales e Industria", text: "¿Qué propiedad mecánica mide la resistencia de un material a ser penetrado o rayado por otro más duro?", options: ["Tenacidad", "Resiliencia", "Dureza", "Elasticidad"], correct: 2, justification: "La dureza es la oposición que presenta la superficie de un material a deformaciones plásticas localizadas o rayado." },
+            { id: 23, topic: "Materiales e Industria", text: "El ensayo de impacto Charpy se utiliza en el laboratorio de materiales para determinar:", options: ["El límite elástico", "La tenacidad / resiliencia al choque", "La resistencia a la fatiga", "La ductilidad en tracción"], correct: 1, justification: "Mide la energía absorbida por una probeta entallada al ser fracturada por un péndulo de impacto." },
+            { id: 24, topic: "Materiales e Industria", text: "Las fundiciones grises se caracterizan por tener el carbono presente principalmente en forma de:", options: ["Cementita secundaria", "Láminas de grafito", "Esferoides de austenita", "Martensita reverdecida"], correct: 1, justification: "El grafito laminar le confiere la excelente maquinabilidad, amortiguamiento de vibraciones y color gris característico a la fractura." },
+            { id: 25, topic: "Materiales e Industria", text: "El metal duro (carburo cementado) utilizado en insertos de corte está compuesto principalmente por:", options: ["Cobalto puro con titanio", "Carburo de tungsteno (WC) sinterizado con cobalto", "Acero rápido fundido", "Óxido de aluminio con nitruros"], correct: 1, justification: "Los granos duros de WC aportan resistencia al desgaste y el cobalto (Co) actúa como aglutinante tenaz." },
+
+            // Tema 6: Tratamientos Térmicos y Lubricación
+            { id: 26, topic: "Tratamientos Térmicos", text: "El objetivo principal del tratamiento térmico de 'Revenido' posterior al temple es:", options: ["Aumentar aún más la dureza extrema", "Reducir las tensiones internas y la fragilidad conservando dureza", "Eliminar el carbono de la superficie", "Agrandar el tamaño de grano ausenítico"], correct: 1, justification: "El temple deja el acero muy duro pero frágil; el revenido ajusta la tenacidad al aliviar tensiones estructurales." },
+            { id: 27, topic: "Tratamientos Térmicos", text: "¿Qué microestructura de máxima dureza se obtiene al enfriar repentinamente el acero desde la fase austenítica?", options: ["Perlita", "Ferrita", "Martensita", "Bainita superior"], correct: 2, justification: "El enfriamiento rápido atrapa el carbono en una red tetragona sobresaturada fuera de equilibrio llamada martensita." },
+            { id: 28, topic: "Tratamientos Térmicos", text: "La 'Cementación' es un tratamiento termoquímico que consiste en:", options: ["Enriquecer la superficie de un acero de bajo carbono con nitrógeno", "Enriquecer la capa superficial con carbono para luego templarla", "Aplicar una capa electroquímica de cromo", "Calentar la pieza en un baño de sales solubles sin cambio químico"], correct: 1, justification: "Aumenta el %C en la capa exterior de piezas de bajo C para lograr núcleo tenaz y superficie dura resistente al desgaste." },
+            { id: 29, topic: "Tratamientos Térmicos", text: "La función primordial de una emulsión de corte (taladrina) durante el mecanizado es:", options: ["Aumentar la fricción", "Refrigerar la herramienta/pieza y lubricar la zona de corte", "Evitar que la viruta se rompa", "Cambiar la estructura cristalina de la pieza"], correct: 1, justification: "El agua absorbe el calor (refrigeración) y el aceite soluble reduce el rozamiento filo-viruta (lubricación)." },
+            { id: 30, topic: "Tratamientos Térmicos", text: "¿Qué propiedad de un aceite lubricante mide su resistencia interna a fluir a una temperatura determinada?", options: ["Punto de inflamación", "Viscosidad", "Índice de acidez", "Untuosidad"], correct: 1, justification: "La viscosidad define el rozamiento interno entre capas de fluido al desplazarse bajo un esfuerzo cortante." },
+
+            // Tema 7: Abrasivos y Afilado
+            { id: 31, topic: "Abrasivos y Afilado", text: "En la codificación de muelas abrasivas, el aglomerante 'V' corresponde a un aglomerante de tipo:", options: ["Resinoide", "Vitrificado", "Metálico", "Goma (Caucho)"], correct: 1, justification: "La letra V representa aglomerantes vitrificados (cerámicos), altamente estables químicamente y rígidos." },
+            { id: 32, topic: "Abrasivos y Afilado", text: "El 'Embotamiento' o 'Cargado' de una muela abrasiva ocurre cuando:", options: ["Los granos abrasivos se desgastan y quedan planos", "Las virutas de material blando se alojan en los poros de la muela", "La muela se fisura por velocidad excesiva", "El eje de la rectificadora vibra"], correct: 1, justification: "Puntos de material dúctil colmatan los espacios intergranulares impidiendo que los filos penetren." },
+            { id: 33, topic: "Abrasivos y Afilado", text: "La operación de reavivar y redefinir la forma geométrica de una muela abrasiva se denomina:", options: ["Sinterizado", "Rectificado", "Truado y Reavivado (Dressing)", "Lapidado"], correct: 2, justification: "El truado devuelve la concentricidad geométrica y el reavivado limpia poros abriendo nuevos filos con diamante." },
+            { id: 34, topic: "Abrasivos y Afilado", text: "Al afilar un buril de acero rápido para torno, el ángulo de incidencia principal (libre) sirve para:", options: ["Evitar el rozamiento de la cara frontal de la herramienta contra la pieza", "Facilitar la salida del flujo de viruta", "Dar resistencia mecánica a la punta", "Determinar la altura de corte"], correct: 0, justification: "Garantiza que solo el filo penetre la pieza, evitando fricción destructiva entre la superficie mecanizada y la herramienta." },
+            { id: 35, topic: "Abrasivos y Afilado", text: "¿Qué tipo de abrasivo sintético es recomendable para rectificar herramientas de carburo metálico (metal duro)?", options: ["Óxido de aluminio cerámico", "Carburo de silicio o Diamante (CBN/SCD)", "Corindón refinado", "Emeril natural"], correct: 1, justification: "El carburo de silicio verde y el diamante sintético tienen la dureza necesaria para cortar la matriz de WC-Co." },
+
+            // Tema 8: Torno Paralelo
+            { id: 36, topic: "Torno Paralelo", text: "En el torno paralelo, la caja Norton es el mecanismo encargado de:", options: ["Transmitir la potencia directa al plato", "Seleccionar los avances automáticos y pasos de roscado", "Mover la contrapunta manualmente", "Sostener las herramientas de corte"], correct: 1, justification: "Contiene la caja de engranajes regulable que modifica la relación de transmisión hacia el husillo de roscar y barra de avanzar." },
+            { id: 37, topic: "Torno Paralelo", text: "Para mecanizar un cono corto de gran ángulo en el torno, el método más adecuado es:", options: ["Desplazar la contrapunta lateralmente", "Girar el carro transversal", "Inclinar el charriot (carro orientable superior)", "Usar una herramienta de tronzar de perfil"], correct: 2, justification: "El charriot permite orientarse manualmente a cualquier ángulo pero para longitudes limitadas por su recorrido." },
+            { id: 38, topic: "Torno Paralelo", text: "Si al cilindrar una pieza larga entre puntos sin luneta la pieza resulta cónica (más ancha en el centro), se debe a:", options: ["Exceso de velocidad de corte", "Flexión de la pieza por fuerza de corte (poca rigidez)", "Desalineación de la torreta portaherramientas", "Herramienta mal afilada en el radio de punta"], correct: 1, justification: "La fuerza radial empuja la pieza en su punto más débil (el centro), haciendo que la herramienta profundice menos." },
+            { id: 39, topic: "Torno Paralelo", text: "El avance en el torno paralelo se expresa habitualmente en unidades de:", options: ["mm/min", "mm/rev", "m/seg", "RPM"], correct: 1, justification: "En el torno, el avance es la distancia lineal que se desplaza la herramienta por cada vuelta completa del husillo (mm/revolución)." },
+            { id: 40, topic: "Torno Paralelo", text: "¿Qué accesorio del torno se utiliza para dar soporte intermedio a piezas largas y delgadas evitando su pandeo durante el mecanizado?", options: ["Plato de garras independientes", "Luneta (fija o móvil)", "Mandril autocentrante", "Brida de arrastre"], correct: 1, justification: "Las lunetas poseen apoyos fijos o con rodamientos que estabilizan piezas cilíndricas de gran relación longitud/diámetro." },
+
+            // Tema 9: Limadora (Cepillo)
+            { id: 41, topic: "Limadora / Cepillo", text: "En una limadora mecánica (cepillo), el movimiento principal de corte es realizado por:", options: ["La mesa que soporta la pieza", "El carnero que porta la herramienta", "La torreta al girar", "El husillo vertical"], correct: 1, justification: "El carnero realiza un movimiento alternativo de vaivén rectilíneo que genera la carrera de corte y retorno." },
+            { id: 42, topic: "Limadora / Cepillo", text: "El mecanismo de 'retorno rápido' (mecanismo de biela oscilante) en la limadora tiene la función de:", options: ["Cortar material durante el viaje de regreso", "Reducir el tiempo improductivo durante la carrera en vacío", "Aumentar la potencia en el corte", "Refrigerar la herramienta"], correct: 1, justification: "Dado que no hay arranque de viruta en la carrera de retroceso, acelerar este movimiento optimiza el tiempo de ciclo." },
+            { id: 43, topic: "Limadora / Cepillo", text: "En la limadora, el avance de la mesa con la pieza se produce intermitentemente durante:", options: ["La carrera de trabajo (corte)", "La carrera de retorno en vacío", "El punto muerto superior únicamente", "Todo el tiempo de forma continua"], correct: 1, justification: "El trinquete mueve el husillo de la mesa justo en el retorno libre para no interferir con la fuerza de penetración en corte." },
+
+            // Tema 10: Fresadora y Divisor
+            { id: 44, topic: "Fresadora y Divisor", text: "En el fresado en oposición (convencional), el sentido de rotación de la fresa respecto al avance de la pieza es:", options: ["En el mismo sentido de desplazamiento", "En sentido contrario a la dirección de avance", "Perpendicular al plano de la mesa", "Variable según el número de dientes"], correct: 1, justification: "El diente de la fresa inicia el corte desde espesor cero hacia arriba, oponiéndose al empuje del avance." },
+            { id: 45, topic: "Fresadora y Divisor", text: "En un plato divisor universal con relación i = 40:1, la fórmula de división directa/simple para N divisiones iguales es:", options: ["V = 40 / N", "V = N / 40", "V = 40 * N", "V = 60 / N"], correct: 0, justification: "El número de vueltas de la manivela (V) es igual a la constante de la corona (40) dividida entre el número de fracciones requeridas (N)." },
+            { id: 46, topic: "Fresadora y Divisor", text: "Para fresar un engranaje helicoidal en una fresadora universal se requiere:", options: ["Girar la mesa el ángulo de la hélice y acoplar el divisor al husillo de la mesa", "Usar una fresa madre cónica únicamente", "Fresarse sin movimiento de avance longitudinal", "Usar el cabezal vertical a 90° únicamente"], correct: 0, justification: "La mesa orientable da el ángulo helicoidal y el tren de engranajes sincroniza la rotación de la pieza con el avance." },
+            { id: 47, topic: "Fresadora y Divisor", text: "¿Qué tipo de fresa se utiliza habitualmente para realizar chaveteros ciegos estandarizados en ejes?", options: ["Fresa cilíndrica tangencial", "Fresa de tres cortes de disco", "Fresa frontal de dos labios (fresa de espiga para taladrar y fresar)", "Fresa de módulo"], correct: 2, justification: "Las fresas de dos labios tienen un filo de corte que pasa por el centro del extremo, permitiendo profundizar como broca." },
+            { id: 48, topic: "Fresadora y Divisor", text: "El 'Fresado en concordancia' (hacia abajo) se caracteriza por:", options: ["Las virutas comienzan con el espesor máximo y terminan en cero", "Generar mala calidad de superficie", "Requerir un husillo sin holgura o con eliminador de juego", "Las opciones A y C son correctas"], correct: 3, justification: "Inicia con máximo espesor de viruta y requiere máquinas rígidas sin holgura para evitar que la fresa 'jale' la pieza." },
+
+            // Tema 11: CAD/CAM/CNC
+            { id: 49, topic: "CAD/CAM/CNC", text: "En programación CNC ISO (G-Code), la función preparatoria 'G00' indica:", options: ["Mecanizado en trayectoria circular en sentido horario", "Movimiento de interpolación lineal a velocidad de avance de corte", "Posicionamiento rápido sin interpolación de corte", "Parada programada del ciclo"], correct: 2, justification: "G00 desplaza los ejes a la máxima velocidad de la máquina para posicionamiento fuera del material." },
+            { id: 50, topic: "CAD/CAM/CNC", text: "El código M en programación CNC 'M03' ejecuta la acción de:", options: ["Encendido del refrigerante de corte", "Arranque del husillo principal en sentido horario (CW)", "Parada de emergencia de los ejes", "Cambio automático de herramienta"], correct: 1, justification: "M03 enciende el cabezal/husillo en sentido a las agujas del reloj a la velocidad S establecida." },
+            { id: 51, topic: "CAD/CAM/CNC", text: "En un torno CNC, la coordenada 'X' representa normalmente:", options: ["El movimiento longitudinal a lo largo del eje del husillo", "El diámetro o radio de la pieza (movimiento transversal)", "El ángulo de rotación de la torreta", "La profundidad de corte auxiliar"], correct: 1, justification: "El eje X rige el movimiento transversal determinando los diámetros en el torneado de revolución." },
+            { id: 52, topic: "CAD/CAM/CNC", text: "La interpolación circular en sentido antihorario en el plano XY se programa con el código G:", options: ["G01", "G02", "G03", "G04"], correct: 2, justification: "G02 es interpolación circular CW (horaria) y G03 es CCW (antihoraria)." },
+            { id: 53, topic: "CAD/CAM/CNC", text: "¿Qué función cumple el punto de referencia 'Cero Pieza' (G54 a G59) en un centro de mecanizado CNC?", options: ["Definir el límite físico indestructible de la máquina", "Establecer el origen del sistema de coordenadas sobre la pieza de trabajo", "Calibrar la longitud de la herramienta de medición", "Determinar la posición del cambiador automático"], correct: 1, justification: "Permite referenciar el programa CAD/CAM al punto físico real fijado en la mesa de la máquina." },
+            { id: 54, topic: "CAD/CAM/CNC", text: "En un archivo de código G, el comando 'G41' activa:", options: ["La compensación de radio de herramienta a la izquierda del perfil", "La compensación de radio de herramienta a la derecha del perfil", "La cancelación de compensación de radio", "La compensación de longitud de herramienta positiva"], correct: 0, justification: "G41 desplaza el centro del cortador a la izquierda de la trayectoria programada según la dirección del movimiento." },
+            { id: 55, topic: "CAD/CAM/CNC", text: "La sigla 'CAM' en el ámbito industrial de diseño y manufactura significa:", options: ["Computer Aided Measurement", "Computer Aided Manufacturing (Manufactura Asistida por Computadora)", "Control Automated Machinery", "Central Analysis Modeling"], correct: 1, justification: "CAM corresponde a Manufactura Asistida por Computadora, software que transforma modelos 3D en trayectorias CNC." },
+            { id: 56, topic: "CAD/CAM/CNC", text: "En el sistema ISO para insertos intercambiables de carburo, la primera letra (ej. 'C' en CNMG) indica:", options: ["El ángulo de incidencia", "La forma geométrica del inserto (ej. C = Rómbico 80°)", "La tolerancia dimensional", "El tipo de rompevirutas"], correct: 1, justification: "La primera letra indica la geometría: C (Rómbico 80°), S (Cuadrado), T (Triangular), W (Trígono), etc." },
+            { id: 57, topic: "CAD/CAM/CNC", text: "¿Qué ventaja principal ofrece el mecanizado de alta velocidad (HSM) frente al mecanizado convencional?", options: ["Utiliza herramientas de menor costo", "Genera mayor calor en la pieza mecanizada", "Permite mayores tasas de remoción con menor fuerza de corte y mejor acabado", "Requiere lubricación pesada por grasa"], correct: 2, justification: "A altas Vc, la mayor parte del calor se evacúa con la viruta antes de transferirse a la pieza, reduciendo deformaciones." },
+            { id: 58, topic: "CAD/CAM/CNC", text: "Un ciclo fijo de taladrado profundo con picoteo y desahogo de viruta en CNC se programa típicamente con:", options: ["G81", "G83", "G76", "G80"], correct: 1, justification: "G83 es el ciclo cónico/intermitente para desahogarle la viruta retenida a brocas en agujeros profundos." },
+            { id: 59, topic: "CAD/CAM/CNC", text: "En modelado 3D CAD, un cuerpo generado mediante la rotación de un perfil 2D alrededor de un eje central se denomina:", options: ["Extrusión", "Revolución", "Barra / Solevado", "Vaciado"], correct: 1, justification: "La función Revolución proyecta un boceto plano haciéndolo girar 360° (o un ángulo dado) respecto a una línea de centro." },
+            { id: 60, topic: "CAD/CAM/CNC", text: "El controlador de la máquina CNC interpreta las instrucciones bloque a bloque. La función 'M06' se usa para:", options: ["Parar el programa al final", "Ejecutar el cambio físico de herramienta en el husillo", "Encender el extractor de virutas", "Resetear las coordenadas de máquina"], correct: 1, justification: "M06 llama al cambiador automático (ATC) para colocar la herramienta seleccionada previamente con el comando T." }
+        ];
+
+        // Variables de Estado de la Aplicación
+        let studentData = { name: "" };
+        let userAnswers = new Array(60).fill(null);
+        let currentIndex = 0;
+        
+        // Temporizadores
+        let globalTimeRemaining = 180 * 60; // 3 horas en segundos
+        let itemTimeRemaining = 180; // 3 minutos por ítem
+        let globalTimerInterval = null;
+        let itemTimerInterval = null;
+
+        // Iniciar examen tras completar modal
+        function startExam(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('studentName').value.trim();
+            if(!nameInput) return;
+
+            studentData.name = nameInput;
+
+            document.getElementById('dispStudentName').innerText = studentData.name;
+            document.getElementById('registrationModal').style.display = 'none';
+            document.getElementById('examContainer').style.display = 'grid';
+
+            initExam();
+        }
+
+        function initExam() {
+            renderGridNav();
+            loadQuestion(0);
+            startTimers();
+        }
+
+        // Manejo de Cronómetros
+        function startTimers() {
+            // Timer global
+            globalTimerInterval = setInterval(() => {
+                if(globalTimeRemaining <= 0) {
+                    clearInterval(globalTimerInterval);
+                    finishExam();
+                } else {
+                    globalTimeRemaining--;
+                    updateGlobalTimerDisplay();
+                }
+            }, 1000);
+
+            // Timer por Ítem
+            resetItemTimer();
+        }
+
+        function resetItemTimer() {
+            clearInterval(itemTimerInterval);
+            itemTimeRemaining = 180; // Reset a 3 min
+            updateItemTimerDisplay();
+
+            itemTimerInterval = setInterval(() => {
+                if(itemTimeRemaining <= 0) {
+                    // Tiempo del ítem agotado -> Avanza automático
+                    if(currentIndex < questionBank.length - 1) {
+                        navigate(1);
+                    } else {
+                        clearInterval(itemTimerInterval);
+                    }
+                } else {
+                    itemTimeRemaining--;
+                    updateItemTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function updateGlobalTimerDisplay() {
+            const hrs = Math.floor(globalTimeRemaining / 3600);
+            const mins = Math.floor((globalTimeRemaining % 3600) / 60);
+            const secs = globalTimeRemaining % 60;
+            const str = `${hrs > 0 ? hrs + ':' : ''}${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            document.getElementById('globalTimer').innerText = str;
+        }
+
+        function updateItemTimerDisplay() {
+            const mins = Math.floor(itemTimeRemaining / 60);
+            const secs = itemTimeRemaining % 60;
+            const timerEl = document.getElementById('itemTimer');
+            timerEl.innerText = `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            
+            if(itemTimeRemaining <= 30) {
+                timerEl.classList.add('timer-warning');
+            } else {
+                timerEl.classList.remove('timer-warning');
+            }
+        }
+
+        // Renderizar pregunta actual
+        function loadQuestion(index) {
+            currentIndex = index;
+            const q = questionBank[currentIndex];
+
+            document.getElementById('currentQNum').innerText = currentIndex + 1;
+            document.getElementById('topicBadge').innerText = q.topic;
+            document.getElementById('questionText').innerText = `${q.id}. ${q.text}`;
+
+            const optionsList = document.getElementById('optionsList');
+            optionsList.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const li = document.createElement('li');
+                li.className = 'option-item';
+                
+                const isSelected = userAnswers[currentIndex] === idx;
+
+                li.innerHTML = `
+                    <label class="option-label ${isSelected ? 'selected' : ''}">
+                        <input type="radio" name="opt" value="${idx}" ${isSelected ? 'checked' : ''} onchange="selectOption(${idx})">
+                        <span><strong>${String.fromCharCode(65 + idx)})</strong> ${opt}</span>
+                    </label>
+                `;
+                optionsList.appendChild(li);
+            });
+
+            // Botones de navegación
+            document.getElementById('btnPrev').style.visibility = currentIndex === 0 ? 'hidden' : 'visible';
+            
+            if(currentIndex === questionBank.length - 1) {
+                document.getElementById('btnNext').style.display = 'none';
+                document.getElementById('btnFinish').style.display = 'block';
+            } else {
+                document.getElementById('btnNext').style.display = 'block';
+                document.getElementById('btnFinish').style.display = 'none';
+            }
+
+            updateGridNav();
+            resetItemTimer();
+        }
+
+        function selectOption(optIndex) {
+            userAnswers[currentIndex] = optIndex;
+            updateGridNav();
+            
+            // Actualizar estilo de selecciones
+            const labels = document.querySelectorAll('.option-label');
+            labels.forEach((lbl, idx) => {
+                if(idx === optIndex) {
+                    lbl.classList.add('selected');
+                } else {
+                    lbl.classList.remove('selected');
+                }
+            });
+        }
+
+        function navigate(dir) {
+            const newIndex = currentIndex + dir;
+            if(newIndex >= 0 && newIndex < questionBank.length) {
+                loadQuestion(newIndex);
+            }
+        }
+
+        // Grid Lateral
+        function renderGridNav() {
+            const gridContainer = document.getElementById('gridNav');
+            gridContainer.innerHTML = '';
+            for(let i = 0; i < questionBank.length; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'grid-btn';
+                btn.id = `grid-btn-${i}`;
+                btn.innerText = i + 1;
+                btn.onclick = () => loadQuestion(i);
+                gridContainer.appendChild(btn);
+            }
+        }
+
+        function updateGridNav() {
+            for(let i = 0; i < questionBank.length; i++) {
+                const btn = document.getElementById(`grid-btn-${i}`);
+                if(!btn) continue;
+
+                btn.className = 'grid-btn';
+                if(userAnswers[i] !== null) {
+                    btn.classList.add('answered');
+                }
+                if(i === currentIndex) {
+                    btn.classList.add('active');
+                }
+            }
+        }
+
+        function confirmFinish() {
+            const unanswered = userAnswers.filter(a => a === null).length;
+            let msg = '¿Está seguro de que desea finalizar la prueba?';
+            if(unanswered > 0) {
+                msg = `Tiene ${unanswered} pregunta(s) sin responder. ¿Desea finalizar el examen de todos modos?`;
+            }
+            if(confirm(msg)) {
+                finishExam();
+            }
+        }
+
+        // Cálculo y Presentación de Resultados
+        function finishExam() {
+            clearInterval(globalTimerInterval);
+            clearInterval(itemTimerInterval);
+
+            document.getElementById('examContainer').style.display = 'none';
+            document.getElementById('resultsPanel').style.display = 'block';
+
+            let correctCount = 0;
+            let incorrectCount = 0;
+            let omittedCount = 0;
+
+            const reviewContainer = document.getElementById('reviewContainer');
+            reviewContainer.innerHTML = '';
+
+            questionBank.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                const isCorrect = userAns === q.correct;
+                const isOmitted = userAns === null;
+
+                if(isCorrect) correctCount++;
+                else if(isOmitted) omittedCount++;
+                else incorrectCount++;
+
+                // Elemento de revisión
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `review-item ${isCorrect ? 'correct-bg' : 'incorrect-bg'}`;
+
+                let statusBadge = isCorrect ? '<span style="color:var(--accent-color); font-weight:bold;">[CORRECTA]</span>' :
+                                  isOmitted ? '<span style="color:var(--warning-color); font-weight:bold;">[OMITIDA]</span>' :
+                                  '<span style="color:var(--danger-color); font-weight:bold;">[INCORRECTA]</span>';
+
+                let userAnsText = isOmitted ? "<em>No respondida</em>" : `${String.fromCharCode(65 + userAns)}) ${q.options[userAns]}`;
+                let correctAnsText = `${String.fromCharCode(65 + q.correct)}) ${q.options[q.correct]}`;
+
+                itemDiv.innerHTML = `
+                    <div style="display:flex; justify-between; margin-bottom: 0.5rem;">
+                        <strong>Ítem ${idx + 1} (${q.topic})</strong>
+                        ${statusBadge}
+                    </div>
+                    <p style="font-weight:600; margin-bottom: 0.5rem;">${q.text}</p>
+                    <div style="font-size:0.95rem;">
+                        <p><strong>Su respuesta:</strong> ${userAnsText}</p>
+                        <p><strong>Respuesta correcta:</strong> ${correctAnsText}</p>
+                    </div>
+                    <div class="justification">
+                        <strong>Justificación Técnica:</strong> ${q.justification}
+                    </div>
+                `;
+
+                reviewContainer.appendChild(itemDiv);
+            });
+
+            // Nota final escalar 0 a 100
+            const percentage = ((correctCount / questionBank.length) * 100).toFixed(1);
+            
+            document.getElementById('resStudentName').innerText = studentData.name;
+            document.getElementById('resDate').innerText = new Date().toLocaleDateString('es-CR') + ' ' + new Date().toLocaleTimeString('es-CR');
+            
+            const scoreEl = document.getElementById('scoreDisplay');
+            scoreEl.innerText = `${percentage}%`;
+
+            const statusEl = document.getElementById('statusDisplay');
+            if(percentage >= 70) {
+                statusEl.innerText = "ESTADO: APROBADO";
+                statusEl.className = "status-passed";
+            } else {
+                statusEl.innerText = "ESTADO: REPROBADO";
+                statusEl.className = "status-failed";
+            }
+
+            document.getElementById('summaryCounts').innerText = `Correctas: ${correctCount} | Incorrectas: ${incorrectCount} | Omitidas: ${omittedCount}`;
+            window.scrollTo(0,0);
+        }
+    </script>
+</body>
+</html>
